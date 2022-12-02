@@ -7,13 +7,22 @@ import (
 )
 
 func main() {
-	cfg, err := ini.Load("owmconfig.ini")
+	cfg := loadConfig("//")
+
+	coord, err := owm.GetCoordinates("Cheboksary", "RU", cfg)
+	if err != nil {
+		log.Println("failed to get coordinates!")
+	}
+
+	weatherResponse := owm.GetWeather(coord, cfg)
+	log.Println(weatherResponse.Weather[0].Description)
+}
+
+func loadConfig(filepath string) *ini.File {
+	cfg, err := ini.Load(filepath)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
 
-	coord := owm.GetCoordinates("Moscow", "RU", cfg)
-
-	weatherResponse := owm.GetWeather(coord, cfg)
-	log.Println(weatherResponse.Weather[0].Icon)
+	return cfg
 }

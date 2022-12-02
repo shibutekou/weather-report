@@ -3,21 +3,22 @@ package owm
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bruma1994/weather-report/internal/owm/models"
-	"gopkg.in/ini.v1"
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/bruma1994/weather-report/internal/owm/models"
+	"gopkg.in/ini.v1"
 )
 
-func GetCoordinates(city, countryCode string, cfg *ini.File) models.Coordinates {
+func GetCoordinates(city, countryCode string, cfg *ini.File) (models.Coordinates, error) {
 	res, err := http.Get(fmt.Sprintf("http://api.openweathermap.org/geo/1.0/direct?q=%s,%s&limit=5&appid=%s",
 		city,
 		countryCode,
 		cfg.Section("OWMConfiguration").Key("apikey").String()))
 
 	if err != nil {
-		log.Println(err.Error())
+		return models.Coordinates{}, err
 	}
 
 	var coord []models.Coordinates
@@ -25,10 +26,14 @@ func GetCoordinates(city, countryCode string, cfg *ini.File) models.Coordinates 
 	resBody, err := io.ReadAll(res.Body)
 	err = json.Unmarshal(resBody, &coord)
 	if err != nil {
-		log.Println(err.Error())
+		return models.Coordinates{}, err
 	}
 
-	return coord[0]
+	if len(coord) < 1 {
+		return models.Coordinates{}, err
+	} else {
+		return coord[0], nil
+	}
 }
 
 func GetWeather(coord models.Coordinates, cfg *ini.File) models.WeatherResponse {
