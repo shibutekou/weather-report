@@ -10,7 +10,7 @@ import (
 	"github.com/bruma1994/weather-report/models"
 )
 
-const apikey = "8e7ef265283f442f85d00f94da1141a4"
+const apikey = "apikey"
 
 func main() {
 	coord := getCoordinates("Moscow", "RU")
