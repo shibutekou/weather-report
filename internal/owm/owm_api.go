@@ -8,14 +8,13 @@ import (
 	"net/http"
 
 	"github.com/bruma1994/weather-report/internal/owm/models"
-	"gopkg.in/ini.v1"
 )
 
-func GetCoordinates(city, countryCode string, cfg *ini.File) (models.Coordinates, error) {
+func GetCoordinates(city, countryCode string, apikey string) (models.Coordinates, error) {
 	res, err := http.Get(fmt.Sprintf("http://api.openweathermap.org/geo/1.0/direct?q=%s,%s&limit=5&appid=%s",
 		city,
 		countryCode,
-		cfg.Section("OWMConfiguration").Key("apikey").String()))
+		apikey))
 
 	if err != nil {
 		return models.Coordinates{}, err
@@ -36,11 +35,11 @@ func GetCoordinates(city, countryCode string, cfg *ini.File) (models.Coordinates
 	}
 }
 
-func GetWeather(coord models.Coordinates, cfg *ini.File) models.WeatherResponse {
+func GetWeather(coord models.Coordinates, apikey string) models.WeatherResponse {
 	res, err := http.Get(fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&appid=%s",
 		coord.Lat,
 		coord.Lon,
-		cfg.Section("OWMConfiguration").Key("apikey").String()))
+		apikey))
 
 	if err != nil {
 		log.Println(err.Error())
