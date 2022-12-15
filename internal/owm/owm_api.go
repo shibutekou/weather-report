@@ -35,12 +35,16 @@ func GetCoordinates(city, countryCode string, apikey string) (models.Coordinates
 	}
 }
 
-func GetWeather(coord models.Coordinates, apikey string) models.WeatherResponse {
-	res, err := http.Get(fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&appid=%s",
-		coord.Lat,
-		coord.Lon,
-		apikey))
+func Weather(city, code string, apikey string) models.WeatherResponse {
+	coordiantes, err := GetCoordinates(city, code, apikey)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
+	res, err := http.Get(fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&appid=%s",
+		coordiantes.Lat,
+		coordiantes.Lon,
+		apikey))
 	if err != nil {
 		log.Println(err.Error())
 	}

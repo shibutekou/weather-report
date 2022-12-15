@@ -9,11 +9,7 @@ import (
 var apikey = os.Getenv("APIKEY")
 
 func main() {
-	coord, err := owm.GetCoordinates("Cheboksary", "RU", apikey)
-	if err != nil {
-		log.Println("failed to get coordinates!")
-	}
+	weather := owm.Weather("Moscow", "RU", apikey)
 
-	weatherResponse := owm.GetWeather(coord, apikey)
-	log.Println(weatherResponse.Weather[0].Description)
+	log.Println(weather.Weather[0].Description)
 }
