@@ -2,14 +2,29 @@ package main
 
 import (
 	"github.com/bruma1994/weather-report/internal/owm"
+	"github.com/bruma1994/weather-report/internal/telegram"
 	"log"
 	"os"
+	"strings"
+	"time"
 )
 
 var apikey = os.Getenv("APIKEY")
 
 func main() {
-	weather := owm.Weather("Moscow", "RU", apikey)
+	weather := make(chan string, 1)
+	messages := make(chan string, 1)
+	response := make(chan string, 1)
 
-	log.Println(weather.Weather[0].Description)
+	go telegram.Bot(messages, response)
+
+	data := <-messages
+	cityData := strings.Fields(data)
+	log.Println("Service started...")
+
+	owm.Weather(cityData[0], cityData[1], apikey, weather)
+
+	weatherData := <-weather
+	response <- weatherData
+	time.Sleep(3 * time.Second)
 }

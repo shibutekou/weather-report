@@ -3,11 +3,10 @@ package owm
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/bruma1994/weather-report/internal/owm/models"
 	"io"
 	"log"
 	"net/http"
-
-	"github.com/bruma1994/weather-report/internal/owm/models"
 )
 
 func GetCoordinates(city, countryCode string, apikey string) (models.Coordinates, error) {
@@ -35,7 +34,7 @@ func GetCoordinates(city, countryCode string, apikey string) (models.Coordinates
 	}
 }
 
-func Weather(city, code string, apikey string) models.WeatherResponse {
+func Weather(city, code string, apikey string, weather chan string) {
 	coordiantes, err := GetCoordinates(city, code, apikey)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -58,5 +57,5 @@ func Weather(city, code string, apikey string) models.WeatherResponse {
 		log.Println(err.Error())
 	}
 
-	return weatherResponse
+	weather <- weatherResponse.Weather[0].Description
 }
