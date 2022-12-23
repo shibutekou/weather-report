@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 )
 
 var apikey = os.Getenv("APIKEY")
@@ -16,15 +15,20 @@ func main() {
 	messages := make(chan string, 1)
 	response := make(chan string, 1)
 
-	go telegram.Bot(messages, response)
-
-	data := <-messages
-	cityData := strings.Fields(data)
 	log.Println("Service started...")
 
-	owm.Weather(cityData[0], cityData[1], apikey, weather)
+	go telegram.Bot(messages, response)
 
-	weatherData := <-weather
-	response <- weatherData
-	time.Sleep(3 * time.Second)
+	runApp(weather, messages, response)
+}
+
+func runApp(weather, messages, response chan string) {
+	for true {
+		cityData := strings.Fields(<-messages) // ["/city", "code"]
+
+		go owm.Weather(cityData[0], cityData[1], apikey, weather)
+
+		weatherData := <-weather
+		response <- weatherData
+	}
 }

@@ -4,6 +4,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"os"
+	"strings"
+	"time"
 )
 
 func Bot(messages, response chan string) {
@@ -33,24 +35,22 @@ func Bot(messages, response chan string) {
 		// Extract the command from the Message.
 		switch update.Message.Command() {
 		case "help":
-			msg.Text = "Отправь мне название города и код. Например, Moscow RU"
+			msg.Text = "Отправь мне название города и код. Например, /Moscow RU"
 		case "status":
 			msg.Text = "Я в порядке :3"
 		default:
-			messages <- update.Message.Text
-
-			msg.Text = <-response
-			//if len(update.Message.Text) != 2 {
-			//	msg.Text = "Некорректные данные"
-			//} else {
-			//	messages <- update.Message.Text
-			//	time.Sleep(time.Second)
-			//	msg.Text = <-messages
-			//}
+			if len(strings.Fields(update.Message.Text)) != 2 { // validate message
+				msg.Text = "Некорректные данные"
+			} else {
+				messages <- update.Message.Text
+				time.Sleep(time.Second)
+				msg.Text = <-response
+			}
 		}
 
 		if _, err = bot.Send(msg); err != nil {
 			log.Panic(err)
 		}
 	}
+
 }
