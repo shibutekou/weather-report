@@ -5,7 +5,9 @@ import (
 	"github.com/bruma1994/weather-report/internal/telegram"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 )
 
 var apikey = os.Getenv("APIKEY")
@@ -17,18 +19,22 @@ func main() {
 
 	log.Println("Service started...")
 
-	go telegram.Bot(messages, response)
+	go telegram.RunBot(messages, response)
 
-	runApp(weather, messages, response)
-}
+	go func(weather, messages, response chan string) {
+		for true {
+			cityData := strings.Fields(<-messages) // ["/city", "code"]
 
-func runApp(weather, messages, response chan string) {
-	for true {
-		cityData := strings.Fields(<-messages) // ["/city", "code"]
+			owm.Weather(cityData[0], cityData[1], apikey, weather)
 
-		go owm.Weather(cityData[0], cityData[1], apikey, weather)
+			weatherData := <-weather
+			response <- weatherData
+		}
+	}(weather, messages, response)
 
-		weatherData := <-weather
-		response <- weatherData
-	}
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGKILL, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
+	<-ch
+
+	log.Println("Service stopped...")
 }

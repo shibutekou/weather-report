@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func Bot(messages, response chan string) {
+func RunBot(messages, response chan string) {
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TGTOKEN"))
 	if err != nil {
 		log.Panic(err)
