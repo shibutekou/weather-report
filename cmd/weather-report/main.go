@@ -13,9 +13,11 @@ import (
 var apikey = os.Getenv("APIKEY")
 
 func main() {
-	weather := make(chan []string, 1)
-	messages := make(chan string, 1)
-	response := make(chan []string, 1)
+	var (
+		weather  = make(chan []string, 1)
+		response = make(chan []string, 1)
+		messages = make(chan string, 1)
+	)
 
 	log.Println("Service started...")
 
