@@ -40,10 +40,11 @@ func Weather(city, code string, apikey string, weather chan string) {
 		log.Fatal(err.Error())
 	}
 
-	res, err := http.Get(fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&appid=%s",
-		coordiantes.Lat,
-		coordiantes.Lon,
-		apikey))
+	res, err := http.Get(
+		fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lang=ru&lat=%f&lon=%f&appid=%s&units=metric",
+			coordiantes.Lat,
+			coordiantes.Lon,
+			apikey))
 	if err != nil {
 		log.Println(err.Error())
 	}
