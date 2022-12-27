@@ -28,4 +28,6 @@ type WeatherResponse struct {
 		Sunrise int    `json:"sunrise"`
 		Sunset  int    `json:"sunset"`
 	} `json:"sys"`
+
+	Name string `json:"name"`
 }

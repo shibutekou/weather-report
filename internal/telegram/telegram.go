@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"os"
@@ -8,7 +9,7 @@ import (
 	"time"
 )
 
-func RunBot(messages, response chan string) {
+func RunBot(messages chan string, response chan []string) {
 	bot, err := tgbotapi.NewBotAPI(os.Getenv("TGTOKEN"))
 	if err != nil {
 		log.Panic(err)
@@ -44,7 +45,10 @@ func RunBot(messages, response chan string) {
 			} else {
 				messages <- update.Message.Text
 				time.Sleep(time.Second)
-				msg.Text = <-response
+				weatherData := <-response // [description, temperature, cityName]
+				prettyWeather := fmt.Sprintf("Сейчас в г. %s %s℃, %s",
+					weatherData[2], weatherData[1], weatherData[0])
+				msg.Text = prettyWeather
 			}
 		}
 
