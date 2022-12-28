@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/bruma1994/weather-report/internal/owm"
 	"github.com/bruma1994/weather-report/internal/telegram"
+	"github.com/go-redis/redis/v8"
 	"log"
 	"os"
 	"os/signal"
@@ -19,9 +20,11 @@ func main() {
 		messages = make(chan string, 1)
 	)
 
+	var rdb = InitRedisClient()
+
 	log.Println("Service started...")
 
-	go telegram.RunBot(messages, response)
+	go telegram.RunBot(messages, response, rdb)
 
 	go func(weather, response chan []string, messages chan string) {
 		for true {
@@ -39,4 +42,14 @@ func main() {
 	<-ch
 
 	log.Println("Service stopped...")
+}
+
+func InitRedisClient() *redis.Client {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+
+	return rdb
 }
