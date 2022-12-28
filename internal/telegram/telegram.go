@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -40,31 +41,18 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 
 		// Extract the command from the Message.
 		switch update.Message.Command() {
-		case "weather":
-			err := rdb.Set(ctx, "state", "step-weather", 0).Err()
-			if err != nil {
-				log.Print(err.Error())
-			}
-
-			val, err := rdb.Get(ctx, "state").Result()
-			log.Println(val)
-			msg.Text = val
-		case "help":
-			msg.Text = "Отправь мне название города и код. Например, /Moscow RU"
+		case "reset":
+			setState(update.SentFrom().ID, START, rdb)
 		case "status":
 			msg.Text = "Я в порядке :3"
+		case "weather":
+			msg.Text = "Отправь мне название города и код. Например, /Moscow RU"
+			setState(update.SentFrom().ID, WEATHER, rdb)
 		default:
-			if len(strings.Fields(update.Message.Text)) != 2 { // validate message
-				msg.Text = "Некорректные данные"
-			} else {
-				messages <- update.Message.Text
-				time.Sleep(time.Second)
-
-				weatherData := <-response // [description, temperature, cityName]
-				prettyWeather := fmt.Sprintf("Сейчас в г. %s %s℃, %s",
-					weatherData[2], weatherData[1], weatherData[0])
-
-				msg.Text = prettyWeather
+			if currentState(update.SentFrom().ID, rdb) == WEATHER {
+				msg.Text = "Отправь мне название города и код. Например, /Moscow RU"
+			} else if currentState(update.SentFrom().ID, rdb) == START {
+				msg.Text = "Если хочешь узнать погоду в твоем городе, отправь команду /weather"
 			}
 		}
 
@@ -75,18 +63,38 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 
 }
 
-func currentState(userID string, rdb *redis.Client) string {
-	val, err := rdb.Get(ctx, userID).Result()
+func currentState(userID int64, rdb *redis.Client) int {
+	val, err := rdb.Get(ctx, strconv.Itoa(int(userID))).Result()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	return val
-}
-
-func setState(userID string, state, rdb *redis.Client) {
-	err := rdb.Set(ctx, userID, state, 0).Err()
+	id, err := strconv.Atoi(val)
 	if err != nil {
 		log.Fatal(err.Error())
+	}
+
+	return id
+}
+
+func setState(userID int64, state int, rdb *redis.Client) {
+	err := rdb.Set(ctx, strconv.Itoa(int(userID)), state, 0).Err()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+}
+
+func sendWeather(update tgbotapi.Update, msg tgbotapi.MessageConfig, messages chan string, response chan []string) {
+	if len(strings.Fields(update.Message.Text)) != 2 { // validate message
+		msg.Text = "Некорректные данные"
+	} else {
+		messages <- update.Message.Text
+		time.Sleep(time.Second)
+
+		weatherData := <-response // [description, temperature, cityName]
+		prettyWeather := fmt.Sprintf("Сейчас в г. %s %s℃, %s",
+			weatherData[2], weatherData[1], weatherData[0])
+
+		msg.Text = prettyWeather
 	}
 }

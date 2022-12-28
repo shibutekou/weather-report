@@ -21,31 +21,31 @@ func GetCoordinates(city, countryCode string, apikey string) (models.Coordinates
 		return models.Coordinates{}, err
 	}
 
-	var coord []models.Coordinates
+	var coordinates []models.Coordinates
 
 	resBody, err := io.ReadAll(res.Body)
-	err = json.Unmarshal(resBody, &coord)
+	err = json.Unmarshal(resBody, &coordinates)
 	if err != nil {
 		return models.Coordinates{}, err
 	}
 
-	if len(coord) < 1 {
+	if len(coordinates) < 1 {
 		return models.Coordinates{}, err
 	} else {
-		return coord[0], nil
+		return coordinates[0], nil
 	}
 }
 
 func Weather(city, code string, apikey string, weather chan []string) {
-	coordiantes, err := GetCoordinates(city, code, apikey)
+	coordinates, err := GetCoordinates(city, code, apikey)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
 	res, err := http.Get(
 		fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lang=ru&lat=%f&lon=%f&appid=%s&units=metric",
-			coordiantes.Lat,
-			coordiantes.Lon,
+			coordinates.Lat,
+			coordinates.Lon,
 			apikey))
 	if err != nil {
 		log.Println(err.Error())
