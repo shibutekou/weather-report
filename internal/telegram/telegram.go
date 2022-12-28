@@ -3,12 +3,13 @@ package telegram
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis/v8"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/go-redis/redis/v8"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 var ctx = context.Background()

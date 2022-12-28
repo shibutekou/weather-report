@@ -1,14 +1,15 @@
 package main
 
 import (
-	"github.com/bruma1994/weather-report/internal/owm"
-	"github.com/bruma1994/weather-report/internal/telegram"
-	"github.com/go-redis/redis/v8"
 	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+
+	"github.com/bruma1994/weather-report/internal/owm"
+	"github.com/bruma1994/weather-report/internal/telegram"
+	"github.com/go-redis/redis/v8"
 )
 
 var apikey = os.Getenv("APIKEY")

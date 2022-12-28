@@ -3,11 +3,12 @@ package owm
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bruma1994/weather-report/internal/owm/models"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/bruma1994/weather-report/internal/owm/models"
 )
 
 func GetCoordinates(city, countryCode string, apikey string) (models.Coordinates, error) {
