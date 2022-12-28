@@ -43,6 +43,7 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 		switch update.Message.Command() {
 		case "reset":
 			setState(update.SentFrom().ID, START, rdb)
+			msg.Text = "Если хочешь узнать погоду в твоем городе, отправь команду /weather"
 		case "status":
 			msg.Text = "Я в порядке :3"
 		case "weather":
@@ -50,7 +51,7 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 			setState(update.SentFrom().ID, WEATHER, rdb)
 		default:
 			if currentState(update.SentFrom().ID, rdb) == WEATHER {
-				msg.Text = "Отправь мне название города и код. Например, /Moscow RU"
+				msg.Text = sendWeather(update, msg, messages, response)
 			} else if currentState(update.SentFrom().ID, rdb) == START {
 				msg.Text = "Если хочешь узнать погоду в твоем городе, отправь команду /weather"
 			}
@@ -84,9 +85,9 @@ func setState(userID int64, state int, rdb *redis.Client) {
 	}
 }
 
-func sendWeather(update tgbotapi.Update, msg tgbotapi.MessageConfig, messages chan string, response chan []string) {
+func sendWeather(update tgbotapi.Update, msg tgbotapi.MessageConfig, messages chan string, response chan []string) string {
 	if len(strings.Fields(update.Message.Text)) != 2 { // validate message
-		msg.Text = "Некорректные данные"
+		return "Некорректные данные"
 	} else {
 		messages <- update.Message.Text
 		time.Sleep(time.Second)
@@ -95,6 +96,6 @@ func sendWeather(update tgbotapi.Update, msg tgbotapi.MessageConfig, messages ch
 		prettyWeather := fmt.Sprintf("Сейчас в г. %s %s℃, %s",
 			weatherData[2], weatherData[1], weatherData[0])
 
-		msg.Text = prettyWeather
+		return prettyWeather
 	}
 }
