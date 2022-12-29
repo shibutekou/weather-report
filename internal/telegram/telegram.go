@@ -13,6 +13,13 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
+// constants for clearer code formatting
+const (
+	description = iota
+	temperature
+	cityName
+)
+
 var ctx = context.Background()
 
 func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
@@ -94,7 +101,7 @@ func sendWeather(update tgbotapi.Update, msg tgbotapi.MessageConfig, messages ch
 
 		weatherData := <-response // [description, temperature, cityName]
 		prettyWeather := fmt.Sprintf("Сейчас в г. %s %s℃, %s",
-			weatherData[2], weatherData[1], weatherData[0])
+			weatherData[cityName], weatherData[temperature], weatherData[description])
 
 		return prettyWeather
 	}
