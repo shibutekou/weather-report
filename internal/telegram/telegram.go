@@ -13,11 +13,17 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-// constants for clearer code formatting
+// constants for weather data from OWM
 const (
 	description = iota
 	temperature
 	cityName
+)
+
+// constants for fixing the state of the user
+const (
+	start = iota
+	weather
 )
 
 var ctx = context.Background()
@@ -48,19 +54,19 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 
 		// Extract the command from the Message.
 		switch update.Message.Command() {
-		case "reset":
-			setState(update.SentFrom().ID, START, rdb)
+		case "start":
+			setState(update.SentFrom().ID, start, rdb)
 			msg.Text = "Если хочешь узнать погоду в твоем городе, отправь команду /weather"
 		case "status":
 			msg.Text = "Я в порядке :3"
 		case "weather":
 			msg.Text = "Отправь мне название города и код. Например, /Moscow RU"
-			setState(update.SentFrom().ID, WEATHER, rdb)
+			setState(update.SentFrom().ID, weather, rdb)
 		default:
-			if currentState(update.SentFrom().ID, rdb) == WEATHER {
-				msg.Text = sendWeather(update, msg, messages, response)
-			} else if currentState(update.SentFrom().ID, rdb) == START {
-				msg.Text = "Если хочешь узнать погоду в твоем городе, отправь команду /weather"
+			if currentState(update.SentFrom().ID, rdb) == weather {
+				msg.Text = sendWeather(update, messages, response)
+			} else if currentState(update.SentFrom().ID, rdb) == start {
+				msg.Text = "Не знаю такой команды. Отправь /start, чтобы начать диалог"
 			}
 		}
 
@@ -92,9 +98,9 @@ func setState(userID int64, state int, rdb *redis.Client) {
 	}
 }
 
-func sendWeather(update tgbotapi.Update, msg tgbotapi.MessageConfig, messages chan string, response chan []string) string {
+func sendWeather(update tgbotapi.Update, messages chan string, response chan []string) string {
 	if len(strings.Fields(update.Message.Text)) != 2 { // validate message
-		return "Некорректные данные"
+		return "Некорректные данные. Если хочешь вернуться в начало, отправь /start"
 	} else {
 		messages <- update.Message.Text
 		time.Sleep(time.Second)
