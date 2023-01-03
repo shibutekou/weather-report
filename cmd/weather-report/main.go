@@ -14,6 +14,12 @@ import (
 
 var apikey = os.Getenv("APIKEY")
 
+// constants for clearer code formatting
+const (
+	city = iota
+	code
+)
+
 func main() {
 	var (
 		weather  = make(chan []string, 1)
@@ -31,7 +37,7 @@ func main() {
 		for true {
 			cityData := strings.Fields(<-messages) // ["/city", "code"]
 
-			owm.Weather(cityData[0], cityData[1], apikey, weather)
+			owm.Weather(cityData[city], cityData[code], apikey, weather)
 
 			weatherData := <-weather
 			response <- weatherData
