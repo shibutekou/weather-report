@@ -54,6 +54,8 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 
 		// Extract the command from the Message.
 		switch update.Message.Command() {
+		case "state":
+			msg.Text = strconv.Itoa(currentState(update.SentFrom().ID, rdb))
 		case "start":
 			setState(update.SentFrom().ID, start, rdb)
 			msg.Text = "Если хочешь узнать погоду в твоем городе, отправь команду /weather"
