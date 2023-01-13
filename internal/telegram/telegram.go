@@ -50,6 +50,27 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 			continue
 		}
 
+		config := tgbotapi.NewSetMyCommands(
+			tgbotapi.BotCommand{
+				Command:     "start",
+				Description: "Начало работы с Weather Report",
+			},
+			tgbotapi.BotCommand{
+				Command:     "weather",
+				Description: "Хочешь узнать погоду в любом городе мира?",
+			},
+			tgbotapi.BotCommand{
+				Command:     "status",
+				Description: "Проверь, в порядке ли я!",
+			},
+			tgbotapi.BotCommand{
+				Command:     "test",
+				Description: "Тестовый вариант меню",
+			},
+		)
+
+		_, _ = bot.Request(config)
+
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 
 		// Extract the command from the Message.
