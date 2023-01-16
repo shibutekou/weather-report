@@ -26,6 +26,8 @@ const (
 	weather
 )
 
+var usersWithAssignedCities map[int64]string = make(map[int64]string)
+
 var ctx = context.Background()
 
 func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
@@ -33,6 +35,8 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	initMenuButtonCommands(bot) // menu button commands list
 
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
@@ -50,27 +54,6 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 			continue
 		}
 
-		config := tgbotapi.NewSetMyCommands(
-			tgbotapi.BotCommand{
-				Command:     "start",
-				Description: "Начало работы с Weather Report",
-			},
-			tgbotapi.BotCommand{
-				Command:     "weather",
-				Description: "Хочешь узнать погоду в любом городе мира?",
-			},
-			tgbotapi.BotCommand{
-				Command:     "status",
-				Description: "Проверь, в порядке ли я!",
-			},
-			tgbotapi.BotCommand{
-				Command:     "test",
-				Description: "Тестовый вариант меню",
-			},
-		)
-
-		_, _ = bot.Request(config)
-
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
 
 		// Extract the command from the Message.
@@ -82,13 +65,18 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 			msg.Text = "Если хочешь узнать погоду в твоем городе, отправь команду /weather"
 		case "status":
 			msg.Text = "Я в порядке :3"
-		case "weather":
+		case "city":
 			msg.Text = "Отправь мне название города и код. Например, /Moscow RU"
 			setState(update.SentFrom().ID, weather, rdb)
+		case "weather":
+			msg.Text = sendWeather(update, messages, response)
 		default:
 			if currentState(update.SentFrom().ID, rdb) == weather {
-				msg.Text = sendWeather(update, messages, response)
-			} else if currentState(update.SentFrom().ID, rdb) == start {
+				if len(strings.Fields(update.Message.Text)) == 2 {
+					usersWithAssignedCities[update.SentFrom().ID] = update.Message.Text
+					msg.Text = sendWeather(update, messages, response)
+				}
+			} else {
 				msg.Text = "Не знаю такой команды. Отправь /start, чтобы начать диалог"
 			}
 		}
@@ -122,10 +110,11 @@ func setState(userID int64, state int, rdb *redis.Client) {
 }
 
 func sendWeather(update tgbotapi.Update, messages chan string, response chan []string) string {
-	if len(strings.Fields(update.Message.Text)) != 2 { // validate message
-		return "Некорректные данные. Если хочешь вернуться в начало, отправь /start"
-	} else {
-		messages <- update.Message.Text
+	//if len(strings.Fields(update.Message.Text)) != 2 { // validate message
+	//	return "Некорректные данные. Если хочешь вернуться в начало, отправь /start"
+	//}
+	if _, ok := usersWithAssignedCities[update.SentFrom().ID]; ok {
+		messages <- usersWithAssignedCities[update.SentFrom().ID]
 		time.Sleep(time.Second)
 
 		weatherData := <-response // [description, temperature, cityName]
@@ -133,5 +122,30 @@ func sendWeather(update tgbotapi.Update, messages chan string, response chan []s
 			weatherData[cityName], weatherData[temperature], weatherData[description])
 
 		return prettyWeather
+	} else {
+		return "Сперва выбери город. Отправь команду /weather"
 	}
+}
+
+func initMenuButtonCommands(bot *tgbotapi.BotAPI) {
+	config := tgbotapi.NewSetMyCommands(
+		tgbotapi.BotCommand{
+			Command:     "start",
+			Description: "Начало работы с Weather Report",
+		},
+		tgbotapi.BotCommand{
+			Command:     "weather",
+			Description: "Хочешь узнать погоду в любом городе мира?",
+		},
+		tgbotapi.BotCommand{
+			Command:     "status",
+			Description: "Проверь, в порядке ли я!",
+		},
+		tgbotapi.BotCommand{
+			Command:     "test",
+			Description: "Тестовый вариант меню",
+		},
+	)
+
+	_, _ = bot.Request(config)
 }
