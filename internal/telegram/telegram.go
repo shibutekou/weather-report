@@ -62,7 +62,8 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 			msg.Text = strconv.Itoa(currentState(update.SentFrom().ID, rdb))
 		case "start":
 			setState(update.SentFrom().ID, start, rdb)
-			msg.Text = "Если хочешь узнать погоду в твоем городе, отправь команду /weather"
+			msg.Text = "Если хочешь узнать погоду в твоем городе, " +
+				"сперва выбери город командой /city, а затем отправь команду /weather"
 		case "status":
 			msg.Text = "Я в порядке :3"
 		case "city":
@@ -73,8 +74,7 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 		default:
 			if currentState(update.SentFrom().ID, rdb) == weather {
 				if len(strings.Fields(update.Message.Text)) == 2 {
-					usersWithAssignedCities[update.SentFrom().ID] = update.Message.Text
-					msg.Text = sendWeather(update, messages, response)
+					msg.Text = assignCity(update.SentFrom().ID, update.Message.Text)
 				}
 			} else {
 				msg.Text = "Не знаю такой команды. Отправь /start, чтобы начать диалог"
@@ -109,10 +109,15 @@ func setState(userID int64, state int, rdb *redis.Client) {
 	}
 }
 
+func assignCity(userID int64, city string) string {
+	if len(strings.Fields(city)) != 2 { // validate message
+		return "Некорректные данные. Если хочешь вернуться в начало, отправь /start"
+	}
+	usersWithAssignedCities[userID] = city
+	return "Город выбран. Теперь можешь смотреть погоду когда захочешь командой /weather!"
+}
+
 func sendWeather(update tgbotapi.Update, messages chan string, response chan []string) string {
-	//if len(strings.Fields(update.Message.Text)) != 2 { // validate message
-	//	return "Некорректные данные. Если хочешь вернуться в начало, отправь /start"
-	//}
 	if _, ok := usersWithAssignedCities[update.SentFrom().ID]; ok {
 		messages <- usersWithAssignedCities[update.SentFrom().ID]
 		time.Sleep(time.Second)
@@ -123,7 +128,7 @@ func sendWeather(update tgbotapi.Update, messages chan string, response chan []s
 
 		return prettyWeather
 	} else {
-		return "Сперва выбери город. Отправь команду /weather"
+		return "Сперва выбери город. Отправь команду /city"
 	}
 }
 
@@ -134,16 +139,16 @@ func initMenuButtonCommands(bot *tgbotapi.BotAPI) {
 			Description: "Начало работы с Weather Report",
 		},
 		tgbotapi.BotCommand{
+			Command:     "city",
+			Description: "Выбери город, погоду вкотором хочешь узнать",
+		},
+		tgbotapi.BotCommand{
 			Command:     "weather",
 			Description: "Хочешь узнать погоду в любом городе мира?",
 		},
 		tgbotapi.BotCommand{
 			Command:     "status",
 			Description: "Проверь, в порядке ли я!",
-		},
-		tgbotapi.BotCommand{
-			Command:     "test",
-			Description: "Тестовый вариант меню",
 		},
 	)
 
