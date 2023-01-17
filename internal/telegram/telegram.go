@@ -58,14 +58,12 @@ func RunBot(messages chan string, response chan []string, rdb *redis.Client) {
 
 		// Extract the command from the Message.
 		switch update.Message.Command() {
-		case "state":
-			msg.Text = strconv.Itoa(currentState(update.SentFrom().ID, rdb))
 		case "start":
 			setState(update.SentFrom().ID, start, rdb)
 			msg.Text = "Если хочешь узнать погоду в твоем городе, " +
 				"сперва выбери город командой /city, а затем отправь команду /weather"
 		case "status":
-			msg.Text = "Я в порядке :3"
+			msg.Text = "pong"
 		case "city":
 			msg.Text = "Отправь мне название города и код. Например, /Moscow RU"
 			setState(update.SentFrom().ID, weather, rdb)
@@ -140,14 +138,14 @@ func initMenuButtonCommands(bot *tgbotapi.BotAPI) {
 		},
 		tgbotapi.BotCommand{
 			Command:     "city",
-			Description: "Выбери город, погоду вкотором хочешь узнать",
+			Description: "Выбор города",
 		},
 		tgbotapi.BotCommand{
 			Command:     "weather",
 			Description: "Хочешь узнать погоду в любом городе мира?",
 		},
 		tgbotapi.BotCommand{
-			Command:     "status",
+			Command:     "ping",
 			Description: "Проверь, в порядке ли я!",
 		},
 	)
