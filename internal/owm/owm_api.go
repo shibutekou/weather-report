@@ -24,6 +24,9 @@ func GetCoordinates(city, countryCode string, apikey string) (models.Coordinates
 	var coordinates []models.Coordinates
 
 	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Println(err.Error())
+	}
 	err = json.Unmarshal(resBody, &coordinates)
 	if err != nil {
 		return models.Coordinates{}, err
@@ -54,6 +57,9 @@ func Weather(city, code string, apikey string, weather chan []string) {
 	var weatherResponse models.WeatherResponse
 
 	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Println(err.Error())
+	}
 
 	err = json.Unmarshal(resBody, &weatherResponse)
 	if err != nil {

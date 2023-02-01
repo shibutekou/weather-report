@@ -9,7 +9,6 @@ import (
 
 	"github.com/bruma1994/weather-report/internal/owm"
 	"github.com/bruma1994/weather-report/internal/telegram"
-	"github.com/go-redis/redis/v8"
 )
 
 var apikey = os.Getenv("APIKEY")
@@ -34,7 +33,7 @@ func main() {
 	go telegram.RunBot(messages, response, rdb)
 
 	go func(weather, response chan []string, messages chan string) {
-		for true {
+		for {
 			cityData := strings.Fields(<-messages) // ["/city", "code"]
 
 			owm.Weather(cityData[city], cityData[code], apikey, weather)
@@ -45,7 +44,7 @@ func main() {
 	}(weather, response, messages)
 
 	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGKILL, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
 	<-ch
 
 	log.Println("Service stopped...")
